@@ -9,3 +9,11 @@ TestResults/
 *.suo
 *.userosscache
 *.sln.docstates
+
+# SQLite local database and journal files
+*.db
+*.db-shm
+*.db-wal
+
+# macOS
+.DS_Store
