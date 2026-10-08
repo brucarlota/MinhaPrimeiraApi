@@ -9,4 +9,5 @@ public interface IProdutoRepository
 	Task<Produto> CriarAsync(Produto produto);
 	Task<Produto?> AtualizarAsync(Produto produto);
 	Task<bool> DeletarAsync(int id);
+	Task<bool> ExisteNomeDuplicado(string nome);
 }
