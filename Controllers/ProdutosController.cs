@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MinhaPrimeiraApi.Models;
 using MinhaPrimeiraApi.Data;
 using Microsoft.EntityFrameworkCore;
+using MinhaPrimeiraApi.Services;
 
 namespace MinhaPrimeiraApi.Controllers;
 
@@ -9,17 +10,17 @@ namespace MinhaPrimeiraApi.Controllers;
 [Route("api/[controller]")]
 public class ProdutosController : ControllerBase
 {
-    private readonly AppDbContext _context;
+	private readonly IProdutoService _service;
 
-	public ProdutosController(AppDbContext context)
+	public ProdutosController(IProdutoService service)
 	{
-		_context = context;
+		_service = service;
 	}
 
     [HttpGet]   
     public async Task<IActionResult> ListarTodos()
     {
-		var produtos = await _context.Produtos.ToListAsync();
+		var produtos = await _service.ListarTodosAsync();
         return Ok(produtos);
     }
 
@@ -27,11 +28,9 @@ public class ProdutosController : ControllerBase
     public async Task<IActionResult> BuscarPorId(int id)
     {
         if(id <= 0)
-        {
             return BadRequest("O ID deve ser maior que zero.");
-        }
 
-        var produto = await _context.Produtos.FirstOrDefaultAsync(p => p.Id == id);
+        var produto = await _service.BuscarPorIdAsync(id);
 
          if (produto == null)
         {
@@ -45,48 +44,43 @@ public class ProdutosController : ControllerBase
     public async Task<IActionResult> Criar([FromBody] Produto prod)
     {
         if (!ModelState.IsValid)
-        {
             return BadRequest(ModelState);
-        }
-        _context.Produtos.Add(prod);
-        await _context.SaveChangesAsync();
-        return Ok($"Produto '{prod.Nome}', '{prod.Preco}' criado com sucesso!");
+
+		try
+		{
+			var produtoCriado = await _service.CriarAsync(prod);
+			return CreatedAtAction(nameof(BuscarPorId), new { id = produtoCriado.Id }, produtoCriado);
+		}
+		catch (ArgumentException ex)
+		{
+			return BadRequest(ex.Message); // 400 
+		}
     }
 
 	[HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(int id, [FromBody] Produto prod)
     {
         if (!ModelState.IsValid)
-        {
             return BadRequest(ModelState);
-        }
 
-        var produtoExistente = await _context.Produtos.FirstOrDefaultAsync(p => p.Id == id);
+        var produto = await _service.AtualizarAsync(id, prod);
 
-        if (produtoExistente == null)
-        {
+        if (produto == null)
             return NotFound($"Produto com ID {id} não encontrado.");
-        }
-
-        produtoExistente.Nome = prod.Nome;
-        produtoExistente.Preco = prod.Preco;
-
-        await _context.SaveChangesAsync();
-        return Ok($"Produto '{produtoExistente.Nome}', '{produtoExistente.Preco}' atualizado com sucesso!");
+       
+        return Ok($"Produto ID '{id}' atualizado com sucesso!");
     }
 
 	[HttpDelete("{id}")]
     public async Task<IActionResult> Excluir(int id)
     {
-        var produto = await _context.Produtos.FirstOrDefaultAsync(p => p.Id == id);
+        var removido = await _service.DeletarAsync(id);
 
-        if (produto == null)
+        if (!removido)
         {
             return NotFound($"Produto com ID {id} não encontrado.");
         }
 
-        _context.Produtos.Remove(produto);
-        await _context.SaveChangesAsync();
-        return Ok($"Produto '{produto.Nome}', '{produto.Preco}' excluído com sucesso!");
+        return NoContent(); // 204 No Content
     }
 }
