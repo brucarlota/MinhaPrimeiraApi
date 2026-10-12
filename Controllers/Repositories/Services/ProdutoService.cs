@@ -34,9 +34,9 @@ public class ProdutoService : IProdutoService
 		return await _repository.CriarAsync(produto);
 	}
 
-	public async Task<Produto?> AtualizarAsync(Produto produto)
+	public async Task<Produto?> AtualizarAsync(int id, Produto produto)
 	{
-		return await _repository.AtualizarAsync(produto);
+		return await _repository.AtualizarAsync(id, produto);
 	}
 
 	public async Task<bool> DeletarAsync(int id)

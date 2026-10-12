@@ -30,9 +30,9 @@ public class ProdutoRepository : IProdutoRepository
 		return produto;
 	}
 
-	public async Task<Produto?> AtualizarAsync(Produto produto)
+	public async Task<Produto?> AtualizarAsync(int id, Produto produto)
 	{
-		var existingProduto = await _context.Produtos.FindAsync(produto.Id);
+		var existingProduto = await _context.Produtos.FindAsync(id);
 		if (existingProduto == null)
 		{
 			return null;
